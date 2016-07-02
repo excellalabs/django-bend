@@ -11,7 +11,7 @@ See the example below for a Before and After scenario.
 Install django-bend and simplejson
 
 ```
-pip install git+https://github.com/excellalabs/django-bend
+pip install git+https://github.com/m3brown/django-bend
 pip pinstall simplejson
 ```
 
@@ -22,12 +22,14 @@ INSTALLED_APPS = (
     ...
     'bend',
 )
+```
 
 ### Create your schema
 
 The example for this readme expects a mysqldump file with the following table:
 
 Filename: sample.sql
+
 ```
 CREATE TABLE `ftbl_individuals` (
   `ID` int(10) NOT NULL,
@@ -55,6 +57,7 @@ class Person(models.Model):
 Create a mapping json file with a naming convention similar to Django Migrations:
 
 Filename: bend/0001_person.json
+
 ```json
 [
 {
