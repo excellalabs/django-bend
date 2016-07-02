@@ -1,7 +1,8 @@
 from django.core.management.base import BaseCommand
 import os
-from bend.loader import loader
-from bend.convert import generate_fixture_tables
+import re
+from django_bend.loader import loader
+from django_bend.convert import generate_fixture_tables
 import simplejson as json
 
 class Command(BaseCommand):
@@ -23,9 +24,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         migration_files = set()
-        for name in os.listdir(options.get('input_path')):
-            if name.endswith(".json"):
-                migration_files.add("%s/%s" % (options.get('input_path'), name))
+        filename_regex = re.compile(r"^[0-9]{4}_.+.json$")
+
+        input_path = options.get('input_path')
+        for name in os.listdir(input_path):
+            if filename_regex.match(name):
+                migration_files.add(os.path.join(input_path, name))
 
         tables = []
         for file in migration_files:

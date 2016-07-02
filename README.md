@@ -10,17 +10,17 @@ See the example below for a Before and After scenario.
 
 Install django-bend and simplejson
 
-```
+```shell
 pip install git+https://github.com/m3brown/django-bend
 pip pinstall simplejson
 ```
 
 Add bend to your Django INSTALLED_APPS
 
-```
+```python
 INSTALLED_APPS = (
     ...
-    'bend',
+    'django_bend',
 )
 ```
 
@@ -30,7 +30,7 @@ The example for this readme expects a mysqldump file with the following table:
 
 Filename: sample.sql
 
-```
+```sql
 CREATE TABLE `ftbl_individuals` (
   `ID` int(10) NOT NULL,
   `FirstName` varchar(25) DEFAULT NULL,
@@ -39,7 +39,7 @@ CREATE TABLE `ftbl_individuals` (
   `Gender` varchar(1) DEFAULT NULL,
   `DOB` datetime DEFAULT NULL,
   PRIMARY KEY (`ID`),
-  UNIQUE KEY `Constraint` (`Family_ID`,`FirstName`,`LastName`)
+  UNIQUE KEY `Constraint` (`FirstName`,`LastName`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 INSERT INTO `ftbl_individuals` (`ID`, `FirstName`, `LastName`, `Middle`, `Gender`, `DOB`) VALUES ('1','Frank','Thomas','L','M','1972-11-28 00:00:00'),('2','Carlos','Baerga','3','M','1966-05-08 00:00:00'),('3','Dolly','Parton','#','F','2000-02-24 00:00:00');
@@ -47,8 +47,9 @@ INSERT INTO `ftbl_individuals` (`ID`, `FirstName`, `LastName`, `Middle`, `Gender
 
 Suppose the Django model looks like this:
 
+Filename: myapp/models.py
+
 ```python
-# File foo/models.py
 class Person(models.Model):
     first_name = models.TextField()
     date_of_birth = models.DateTimeField(blank=True, null=True)
@@ -56,62 +57,70 @@ class Person(models.Model):
 
 Create a mapping json file with a naming convention similar to Django Migrations:
 
-Filename: bend/0001_person.json
+Filename: myapp/bend/0001_person.json
 
 ```json
 [
-{
+  {
     "from_table": "ftbl_individuals",
     "to_table": "foo.person",
     "columns": [
-        {
-            "from": "FirstName",
-            "to": "first_name"
-        },
-        {
-            "from": "DOB",
-            "to": "date_of_birth"
-        }
+      {
+        "from": "FirstName",
+        "to": "first_name"
+      },
+      {
+        "from": "DOB",
+        "to": "date_of_birth"
+      }
     ]
-}
+  }
 ]
 ```
 
-You can define more tables in the same file, or create new files for new definitions (e.g. `myapp/bend/0002_company.json`).
+You can define more tables in the same file, or create new files for new definitions (e.g. `myapp/bend/0002_company.json`). Bend will find all the files that match the `XXXX_name.json` format where X is a digit.
 
 ### Create the fixture file
 
-Run `./manage.py bend_data myapp/bend/ sample.sql --indent=4` to dump the fixture output to the terminal.
+Run `./manage.py bend_data myapp/bend/ sample.sql --indent=2` to dump the fixture output to the terminal.
 
 ```json
 [
-    {
-        "fields": {
-            "first_name": "Frank",
-            "date_of_birth": "1972-11-28 00:00:00"
-        },
-        "model": "foo.person",
-        "pk": 1
+  {
+    "fields": {
+      "first_name": "Frank",
+      "date_of_birth": "1972-11-28 00:00:00"
     },
-    {
-        "fields": {
-            "first_name": "Carlos",
-            "date_of_birth": "1966-05-08 00:00:00"
-        },
-        "model": "foo.person",
-        "pk": 2
+    "model": "foo.person",
+    "pk": 1
+  },
+  {
+    "fields": {
+      "first_name": "Carlos",
+      "date_of_birth": "1966-05-08 00:00:00"
     },
-    {
-        "fields": {
-            "first_name": "Dolly",
-            "date_of_birth": "2000-02-24 00:00:00"
-        },
-        "model": "foo.person",
-        "pk": 3
-    }
+    "model": "foo.person",
+    "pk": 2
+  },
+  {
+    "fields": {
+      "first_name": "Dolly",
+      "date_of_birth": "2000-02-24 00:00:00"
+    },
+    "model": "foo.person",
+    "pk": 3
+  }
 ]
 ```
 
 If it looks like what you expect, pipe it to a fixture file:
 
-`./manage.py bend_data myapp/bend/ sample.sql > myapp/fixtures/bend.json`
+```shell
+./manage.py bend_data myapp/bend/ sample.sql > myapp/fixtures/bend.json
+```
+
+The fixture can then be loaded easily:
+
+```shell
+./manage.py loaddata myapp/fixtures/bend.json
+```
