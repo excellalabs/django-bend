@@ -8,8 +8,8 @@ import simplejson as json
 from collections import OrderedDict
 import itertools
 
-from schema import TableSchema, ColumnSchema
-from parsing import sql_list_splitter, parse_into_object_type, parse_sql_list
+from .schema import TableSchema, ColumnSchema
+from .parsing import sql_list_splitter, parse_into_object_type, parse_sql_list
 
 
 def create_fixture_item(model, keys, values):

@@ -8,11 +8,12 @@ See the example below for a Before and After scenario.
 
 ### How to install
 
-Install django-bend and simplejson
+Note that django-bend requires Django >=1.8.0.  This requirement is not enforced via `pip install` to prevent the scenario of unknowingly upgrading your Django version.
+
+Install django-bend
 
 ```shell
 pip install git+https://github.com/m3brown/django-bend
-pip pinstall simplejson
 ```
 
 Add bend to your Django INSTALLED_APPS
