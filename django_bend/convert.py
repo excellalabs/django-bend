@@ -22,7 +22,7 @@ def create_fixture_item(model, keys, values):
     #
     # {
     #   "fields": {
-    #     "phone": "2025521781",
+    #     "phone": "1234567890",
     #     "description": "School Name",
     #     "address": "123 School Street",
     #   },

@@ -20,7 +20,7 @@ def sql_list_splitter(sqlstr):
                 raise Exception("unexpected '(' when parsing string")
             elif c == '(' and not is_open_group and not is_open_string:
                 is_open_group = not is_open_group
-            elif c in ('"', "'"):
+            elif c == "'":
                 is_open_string = not is_open_string
 
             last_char_was_escape = (c == '\\')
@@ -42,12 +42,18 @@ def parse_into_object_type(raw_value):
         return None
 
     # If the value isn't NULL, then let's parse it
-    regex = re.compile(r"^ ?[`'\"](?P<value>.*)[`'\"]$")
+    regex = re.compile(r"^ ?[`'\"](?P<value>.*)[`'\"] ?$")
     result = regex.match(raw_value)
     if result:
         value = result.group('value')
     else:
         raise Exception("Unrecognized value format: %s" % raw_value)
+
+    # Number parsing is problematic, for example strings with leading
+    # zeros are not the same once parsed as an integer (0023 -> 23).
+    # In this case keep the value as a string
+    if len(value) > 1 and value[0] == '0':
+        return value
 
     try:
         return int(value)
@@ -58,9 +64,8 @@ def parse_into_object_type(raw_value):
             # Probably just a regular string
             return value
     
-    
 
-def parse_sql_list(results, wrap=" ~`'\"", delim=',', column_filter=None):
+def parse_sql_list(results, delim=',', column_filter=None):
     # Take sql style list in string format: "('blah', 'derp', 'herp')"
     # Return python list: ['blah', 'derp', 'herp']
 
