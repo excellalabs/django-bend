@@ -6,7 +6,12 @@ import getopt
 import re
 import simplejson as json
 from collections import OrderedDict
-import itertools
+
+# Python3+ zip returns an iterable, use izip for Python2
+try:
+    from itertools import izip as zip
+except ImportError:
+    pass # use built-in zip for Python3
 
 from .schema import TableSchema, ColumnSchema
 from .parsing import sql_list_splitter, parse_into_object_type, parse_sql_list
@@ -29,7 +34,7 @@ def create_fixture_item(model, keys, values):
     #   "model": "core.school",
     #   "pk": 7
     # },
-    fields = dict(itertools.izip(keys, values))
+    fields = dict(zip(keys, values))
     if 'pk' in fields.keys():
         pk = fields.pop('pk')
     else:
