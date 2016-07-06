@@ -1,10 +1,7 @@
 # -*- coding: utf-8 -*-
 # This code is influenced by https://github.com/rstrobl/sqldump-converter
 
-import sys
-import getopt
 import re
-import simplejson as json
 from collections import OrderedDict
 
 # Python3+ zip returns an iterable, use izip for Python2
@@ -13,8 +10,8 @@ try:
 except ImportError:
     pass # use built-in zip for Python3
 
-from .schema import TableSchema, ColumnSchema
-from .parsing import sql_list_splitter, parse_into_object_type, parse_sql_list
+from .schema import ColumnSchema
+from .parsing import sql_list_splitter, parse_sql_list
 
 
 def create_fixture_item(model, keys, values):
@@ -42,66 +39,93 @@ def create_fixture_item(model, keys, values):
 
     return {'fields': fields, 'model': model, 'pk': pk} 
 
-def generate_fixture_tables(definition, dumpfilename):
-    # we only need the INSERT lines
-    regex = re.compile(r"INSERT INTO [`'\"](?P<table>\w+)[`'\"] \((?P<columns>.+)\) VALUES ?(?P<values>.+);")
+def get_table_from_dump(tablename, dumpfilename, column_filter=None, offset=None):
+    # Pull the requested table from the provided sql dump file
+    # Return a 3-tuple:
+    #  - line number of the table's insert in sql dump
+    #  - list of column names
+    #  - list of rows, where each row is a list of values
+    #
+    # column_filter can be used to return only select columns. The primary
+    # key field (`id` or `ID`) will always be returned
+
+    regex = re.compile(r"INSERT INTO [`'\"]%s[`'\"] \((?P<columns>.+)\) VALUES ?(?P<values>.+);" % tablename)
+
+    column_names = []
+    rows = []
 
     with open(dumpfilename, 'r') as dumpfile:
-        for line in dumpfile:
+        if offset:
+            dumpfile.seek(offset)
+
+        for line_counter, line in enumerate(dumpfile):
             match = regex.match(line)
-   
-            # If an INSERT statement
             if match:
-                table = match.group('table')
 
-                # Check and see if the insert is for one of the defined mapping tables
-                for translation_table_obj in definition:
-                    if table in translation_table_obj['from_table']:
-                        columns = []
-                        for column in translation_table_obj['columns']:
-                            columns.append(ColumnSchema(column['from'], column['to']))
-                        table_obj = TableSchema(from_table=translation_table_obj['from_table'],
-                                                to_table=translation_table_obj['to_table'],
-                                                columns=columns)
-                        
-                        # Forward the generator results from process_table
-                        # Ideally `yield for` would be used here, but that is
-                        # not python2 compatible
-                        for item in process_table(table_obj,
-                                                  raw_keys=match.group('columns'),
-                                                  raw_values=match.group('values')):
-                            yield item
+                # Get columns (removing unwanted columns if requested)
+                column_names = parse_sql_list(match.group('columns'))
+                rows = sql_list_splitter(match.group('values'))
+
+    if column_names and rows:
+        # we need to track both column name and index, use OrderedDict
+        # to make it easier to align column and value objets
+        column_dict = OrderedDict()
+        for i,x in enumerate(column_names):
+            column_dict[x] = i
+
+        if column_filter:
+            for column in column_names:
+                # keep primary keys even if not part of filter list
+                if column not in column_filter and column not in ['id', 'ID']:
+                    del column_dict[column]
+
+        # Filter the columns from the original (pre-filter) column indices
+        values_list_of_lists = (parse_sql_list(r, column_filter=column_dict.values()) for r in rows)
+
+        return (line_counter, column_dict.keys(), values_list_of_lists)
+
+    raise Exception("Table `%s` not found in file `%s`" % (tablename, dumpfilename))
 
 
-def process_table(table_schema, raw_keys, raw_values):
-    columns_names_to_include = [c.from_name for c in table_schema.columns]
-    # We want to implicitely include the primary key field
-    columns_names_to_include.extend(['ID', 'id'])
+def generate_fixture_tables(tableschemas, dumpfilename):
+    # Parse requested tables from sql dump, return generator of
+    # fixture-formatted JSON objects for each row in each table
+
+    for table in tableschemas:
+        old_column_names = [column.from_name for column in table.columns]
+        (index, columns, rows) = get_table_from_dump(table.from_table, dumpfilename,
+                                                     column_filter=old_column_names)
+
+        # add mapping for primary key
+        for count, col in enumerate(columns):
+            if col in ['id', 'ID']:
+                pk_column = ColumnSchema(from_name=col, to_name='pk')
+                table.columns.insert(count, pk_column)
+                break
+        else:
+            raise Exception("Did not find primary key (id or ID) in table %s" % table.from_table)
+
+        # Forward the generator results from process_table
+        # Ideally `yield for` would be used here, but that is
+        # not python2 compatible
+        for item in process_table(table_schema=table, columns=columns, rows=rows):
+            yield item
+
+
+def process_table(table_schema, columns, rows):
+    # For each row, map the data to the new column names and
+    # return a fixture-formatted JSON object
 
     # Ensure all the column names defined actually exist
-    column_names = parse_sql_list(raw_keys)
     for column in table_schema.columns:
-       if column.from_name not in column_names:
+       if column.from_name not in columns:
            raise Exception("Unrecognized table name: %s:%s" % (table_schema.from_table,
                                                                column.from_name))
 
-    for counter, item in enumerate(column_names):
-        if item in ['id', 'ID']:
-            column_obj = ColumnSchema(from_name=item, to_name='pk', index=counter)
-            table_schema.columns.append(column_obj)
-        else:
-            for column in table_schema.columns:
-                if item == column.from_name:
-                    column.index = counter
-                    break
 
     new_column_names = [column.to_name for column in table_schema.columns]
-    sql_column_indices = [column.index for column in table_schema.columns]
-
-    insert_rows = sql_list_splitter(raw_values)
-    values_list_of_lists = (parse_sql_list(l, column_filter=sql_column_indices) for l in insert_rows)
 
     # convert data to dictionary and append to results
-    for values_list in values_list_of_lists:
+    for values_list in rows:
         yield create_fixture_item(keys=new_column_names, values=values_list,
                                   model=table_schema.to_table)

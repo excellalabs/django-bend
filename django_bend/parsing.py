@@ -3,6 +3,10 @@ import re
 def sql_list_splitter(sqlstr):
     # parse a string of format (0, 'a', 'blah'),('b', 1, 'parens()')
     # into a list for each parentheses group
+    #
+    # If not wrapped in parentheses, will split on commas
+    # e.g. "0, 'a', 'blah, test', 'parens()'"
+    # returns [0, "'a'", "'blah, test'", "'parens()'"]
     new_str = ''
     is_open_group = False
     is_open_string = False
@@ -12,12 +16,12 @@ def sql_list_splitter(sqlstr):
         if not last_char_was_escape:
             if c == ',' and not is_open_group and not is_open_string:
                 c = '\n'
-            elif c == ')' and not is_open_group:
-                raise Exception("unexpected ')' when parsing string")
+            elif c == ')' and not is_open_group and not is_open_string:
+                raise Exception("unexpected ')' when parsing string `%s`" % sqlstr)
             elif c == ')' and is_open_group and not is_open_string:
                 is_open_group = not is_open_group
             elif c == '(' and is_open_group and not is_open_string:
-                raise Exception("unexpected '(' when parsing string")
+                raise Exception("unexpected '(' when parsing string `%s`" % sqlstr)
             elif c == '(' and not is_open_group and not is_open_string:
                 is_open_group = not is_open_group
             elif c == "'":
@@ -65,11 +69,11 @@ def parse_into_object_type(raw_value):
             return value
     
 
-def parse_sql_list(results, delim=',', column_filter=None):
+def parse_sql_list(results, column_filter=None):
     # Take sql style list in string format: "('blah', 'derp', 'herp')"
     # Return python list: ['blah', 'derp', 'herp']
 
-    values = results.strip('()').split(delim)
+    values = sql_list_splitter(results.strip('()'))
 
     # Cherry pick select column indices if provided
     if column_filter:

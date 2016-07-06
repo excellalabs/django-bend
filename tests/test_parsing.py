@@ -15,9 +15,6 @@ class TestParseSqlList:
         assert parse_sql_list("( 'cat', 'dog', 'fish' )") == self.default_response
         assert parse_sql_list("('cat', 'dog', 'fish')") == self.default_response
 
-    def test_delimiter(self):
-        assert parse_sql_list("('cat'|'dog'|'fish')", delim='|') == self.default_response
-
     def test_column_filter(self):
         assert parse_sql_list("('cat','dog','fish')", column_filter=[1]) == ['dog']
         assert parse_sql_list("('cat','dog','fish')", column_filter=[0,2]) == ['cat', 'fish']

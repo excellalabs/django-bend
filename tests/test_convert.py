@@ -53,23 +53,24 @@ class TestProcessTable:
 
         schema = TableSchema(from_table='ftbl_properties',
                              to_table='core.property')
+        schema.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
         schema.columns.append(ColumnSchema(from_name="Phone_Number", to_name="phone"))
         schema.columns.append(ColumnSchema(from_name="PropertyAddress", to_name="address"))
 
-        raw_keys = "(`ID`, `Phone_Number`, `Description`, `PropertyAddress`)"
-        raw_values = "('1','(123)456-7890','Property Name','123 Property Street'),('2','(098) 765-4321','Empty Address',NULL),('3','152-6374','Another Property','456 Main Street')"
+        keys = ["ID", "Phone_Number", "PropertyAddress"]
+        values = [[1,'(123)456-7890','123 Property Street'],[2,'(098) 765-4321',None],[3,'152-6374','456 Main Street']]
 
         with mock.patch('django_bend.convert.create_fixture_item') as cfi:
-            res = process_table(schema, raw_keys, raw_values)
+            res = process_table(schema, keys, values)
             # convert rest to a list to exercise the generator
             list(res)
 
             model = 'core.property'
-            keys = ['phone', 'address', 'pk']
+            keys = ['pk', 'phone', 'address']
             call1 = mock.call(model=model, keys=keys,
-                              values=['(123)456-7890', '123 Property Street', 1])
+                              values=[1, '(123)456-7890', '123 Property Street'])
             call2 = mock.call(model=model, keys=keys,
-                              values=['(098) 765-4321', None, 2])
+                              values=[2, '(098) 765-4321', None])
             call3 = mock.call(model=model, keys=keys,
-                              values=['152-6374', '456 Main Street', 3])
+                              values=[3, '152-6374', '456 Main Street'])
             cfi.assert_has_calls([call1, call2, call3])

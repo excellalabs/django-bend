@@ -1,8 +1,8 @@
 from django.core.management.base import BaseCommand
 import os
 import re
-from django_bend.loader import loader
 from django_bend.convert import generate_fixture_tables
+from django_bend.schema import TableSchema
 import simplejson as json
 
 class Command(BaseCommand):
@@ -34,8 +34,9 @@ class Command(BaseCommand):
         tables = []
         for file in migration_files:
             with open(file, 'r') as jsonfile:
-                tables.extend(json.load(jsonfile))
+                for table in json.load(jsonfile):
+                    tables.append(TableSchema.create_from_json(table))
 
-        fixtures = generate_fixture_tables(definition=tables, dumpfilename=options['mysql_dump'])
+        fixtures = generate_fixture_tables(tableschemas=tables, dumpfilename=options['mysql_dump'])
 
         print(json.dumps(fixtures, indent=options['indent'], iterable_as_array=True))
