@@ -13,7 +13,7 @@ Note that django-bend requires Django >=1.8.0.  This requirement is not enforced
 Install django-bend
 
 ```shell
-pip install git+https://github.com/m3brown/django-bend
+pip install django-bend
 ```
 
 Add bend to your Django INSTALLED_APPS
