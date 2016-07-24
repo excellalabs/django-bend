@@ -1,5 +1,8 @@
 # Django Bend
 
+[![Build Status](https://travis-ci.org/excellalabs/django-bend.svg?branch=master)](https://travis-ci.org/excellalabs/django-bend)
+[![Coverage Status](https://coveralls.io/repos/excellalabs/django-bend/badge.svg?branch=master&service=github)](https://coveralls.io/github/excellalabs/django-bend?branch=master)
+
 A tool to help translate a legacy mysqldump to fixtures for a similar-but-different Django model.
 
 The use case for this tool is when you want to port data from a legacy system, but your Django models were designed in a way that the data doesn't quite align correctly.  Table names and column names could be different, or columns could be completely missing.

@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "django_bend",
-    description = "Database dump conversion to Django fixtures"
+    description = "Database dump conversion to Django fixtures",
     version = "0.0.2",
     license = "public domain",
     classifiers = [
@@ -17,7 +17,7 @@ setup(
         'Framework :: Django :: 1.8',
         'Framework :: Django :: 1.9',
     ],
-    keywords = 'django fixture database dump'
+    keywords = 'django fixture database dump',
     packages = find_packages(),
     install_requires = [
         'simplejson>=3.8.0',
