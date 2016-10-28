@@ -1,1 +1,0 @@
-[{"from_table": "ftbl_individuals", "to_table": "foo.person", "columns": [{"from": "FirstName", "to": "first_name"}, {"from": "DOB", "to": "date_of_birth"}]}]

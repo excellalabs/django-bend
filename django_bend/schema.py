@@ -9,7 +9,10 @@ class TableSchema:
     def create_from_json(table_definition):
         columns = []
         for column in table_definition['columns']:
-            columns.append(ColumnSchema(column.get('from'), column.get('to'), column.get('mapping')))
+            if column.get('mapping') is not None:
+                columns.append(ColumnSchema(column.get('from'), column.get('to'), column.get('mapping')))
+            else:
+                columns.append(ColumnSchema(column.get('from'), column.get('to')))
         table_obj = TableSchema(from_table=table_definition['from_table'],
                                 to_table=table_definition['to_table'],
                                 columns=columns)
@@ -22,11 +25,11 @@ class TableSchema:
 
 class ColumnSchema:
 
-    def __init__(self, from_name, to_name, index=None, **mapping):
-        # **mapping is kwargs of dicts, eg map_1={'from': 1, 'to': true}
+    def __init__(self, from_name, to_name, mapping=[], index=None):
+        # mapping is expected to be a list of dicts
         self.from_name = from_name
         self.to_name = to_name
-        self.mapping = MappingSchema(**mapping)
+        self.mapping = MappingSchema(mapping)
         self.index = index
 
     def has_mapping(self):
@@ -35,10 +38,10 @@ class ColumnSchema:
 
 class MappingSchema:
 
-    def __init__(self, **mapping):
+    def __init__(self, mapping):
         self.mappings = []
-        for value in mapping.values():
-            self.mappings.append(Mapping(from_value=value['from'], to_value=value['to']))
+        for map in mapping:
+            self.mappings.append(Mapping(from_value=map['from'], to_value=map['to']))
 
 
 class Mapping:

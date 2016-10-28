@@ -1,6 +1,4 @@
 import json
-
-import os
 import pytest
 from django_bend.schema import TableSchema, ColumnSchema, MappingSchema, Mapping
 
@@ -8,15 +6,15 @@ from django_bend.schema import TableSchema, ColumnSchema, MappingSchema, Mapping
 class TestMappingSchema:
 
     def test_simple_create(self):
-        schema = MappingSchema(map_1={'from': 1, 'to': True},
-                               map_2={'from': 2, 'to': False})
+        schema = MappingSchema([{'from': 1, 'to': True},
+                               {'from': 2, 'to': False}])
         assert len(schema.mappings) == 2
 
     def test_mapping_attrs(self):
-        schema = MappingSchema(map_1={'from': 1, 'to': True},
-                               map_2={'from': 2, 'to': False})
-        assert schema.mappings[1] == Mapping(1, True)
-        assert schema.mappings[0] == Mapping(2, False)
+        schema = MappingSchema([{'from': 1, 'to': True},
+                               {'from': 2, 'to': False}])
+        assert schema.mappings[0] == Mapping(1, True)
+        assert schema.mappings[1] == Mapping(2, False)
 
 
 class TestColumnSchema:
@@ -26,8 +24,7 @@ class TestColumnSchema:
         assert len(col.mapping.mappings) == 0
 
     def test_with_mapping(self):
-        col = ColumnSchema('house', 'core.house', map_1={'from': 1, 'to': True},
-                           map_2={'from': 2, 'to': False})
+        col = ColumnSchema('house', 'core.house', [{'from': 1, 'to': True}, {'from': 2, 'to': False}])
         assert len(col.mapping.mappings) == 2
 
 
@@ -59,11 +56,11 @@ class TestTableSchema:
                           '             "from": "IsHomeless", '
                           '             "to": "is_homeless", '
                           '             "mapping": '
-                          '             {'
-                          '                 "map_1": {"to": "true", "from": "1"}, '
-                          '                 "map_2": {"to": "false", "from": "2"} '
-                          '             }'
-                          '         }, '
+                          '             ['
+                          '                 {"to": "true", "from": "1"}, '
+                          '                 {"to": "false", "from": "2"} '
+                          '             ]'
+                          '         }'
                           '     ]'
                           ' }'
                           ']')[0]
