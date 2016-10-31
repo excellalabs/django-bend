@@ -31,16 +31,23 @@ def create_fixture_item(model, keys, values):
     #   "model": "core.school",
     #   "pk": 7
     # },
-    if isinstance(keys, dict):
-        pass
+    fields = dict(zip(keys, values))
+    if 'pk' in fields.keys():
+        pk = fields.pop('pk')
     else:
-        fields = dict(zip(keys, values))
-        if 'pk' in fields.keys():
-            pk = fields.pop('pk')
-        else:
-            raise Exception('Expected "pk" as a key in dictionary')
+        raise Exception('Expected "pk" as a key in dictionary')
 
-        return {'fields': fields, 'model': model, 'pk': pk}
+    if isinstance(keys, dict):
+        keys.pop('pk')
+        fields = {}
+        for index, key in enumerate(keys.keys()):
+            if not keys[key].empty():
+                fields[key] = keys[key].map_elem(values[index])
+            else:
+                fields[key] = values[index]
+
+    return {'fields': fields, 'model': model, 'pk': pk}
+
 
 def get_table_from_dump(tablename, dumpfilename, column_filter=None, offset=None):
     # Pull the requested table from the provided sql dump file
@@ -126,7 +133,7 @@ def process_table(table_schema, columns, rows):
                                                                column.from_name))
 
     if table_schema.has_mappings():
-        new_columns = {'mapping': column.mapping for column.to_name in table_schema.columns}
+        new_columns = {column.to_name: column.mapping for column in table_schema.columns}
     else:
         new_columns = [column.to_name for column in table_schema.columns]
 
