@@ -82,6 +82,36 @@ Filename: myapp/bend/0001_person.json
 ]
 ```
 
+Your individual columns can have data mapping values for cleaning up bad data:
+
+```json
+[
+  {
+    "from_table": "ftbl_individuals",
+    "to_table": "foo.person",
+    "columns": [
+      {
+        "from": "FirstName",
+        "to": "first_name"
+      },
+      {
+        "from": "DOB",
+        "to": "date_of_birth"
+      },
+      {
+        "from": "Active",
+        "to": "is_active",
+        "mapping":
+        [
+            {"to": 1, "from": 2},
+            {"to": 0, "from": 1}
+        ]
+      }
+    ]
+  }
+]
+```
+
 You can define more tables in the same file, or create new files for new definitions (e.g. `myapp/bend/0002_company.json`). Bend will find all the files that match the `XXXX_name.json` format where X is a digit.
 
 ### Create the fixture file
