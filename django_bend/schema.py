@@ -22,6 +22,7 @@ class TableSchema:
         for col in self.columns:
             if col.has_mapping():
                 return True
+        return False
 
 class ColumnSchema:
 

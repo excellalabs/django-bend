@@ -31,13 +31,16 @@ def create_fixture_item(model, keys, values):
     #   "model": "core.school",
     #   "pk": 7
     # },
-    fields = dict(zip(keys, values))
-    if 'pk' in fields.keys():
-        pk = fields.pop('pk')
+    if isinstance(keys, dict):
+        pass
     else:
-        raise Exception('Expected "pk" as a key in dictionary')
+        fields = dict(zip(keys, values))
+        if 'pk' in fields.keys():
+            pk = fields.pop('pk')
+        else:
+            raise Exception('Expected "pk" as a key in dictionary')
 
-    return {'fields': fields, 'model': model, 'pk': pk} 
+        return {'fields': fields, 'model': model, 'pk': pk}
 
 def get_table_from_dump(tablename, dumpfilename, column_filter=None, offset=None):
     # Pull the requested table from the provided sql dump file
@@ -122,10 +125,13 @@ def process_table(table_schema, columns, rows):
            raise Exception("Unrecognized table name: %s:%s" % (table_schema.from_table,
                                                                column.from_name))
 
+    if table_schema.has_mappings():
+        new_columns = {'mapping': column.mapping for column.to_name in table_schema.columns}
+    else:
+        new_columns = [column.to_name for column in table_schema.columns]
 
-    new_column_names = [column.to_name for column in table_schema.columns]
 
     # convert data to dictionary and append to results
     for values_list in rows:
-        yield create_fixture_item(keys=new_column_names, values=values_list,
+        yield create_fixture_item(keys=new_columns, values=values_list,
                                   model=table_schema.to_table)

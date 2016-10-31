@@ -34,33 +34,32 @@ class TestProcessTable:
                               values=[3, '152-6374', '456 Main Street'])
             cfi.assert_has_calls([call1, call2, call3])
 
-    # def test_simple_mapping(self):
-    #     schema = TableSchema(from_table="ftbl_person", to_table="core.person")
-    #     schema.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
-    #     schema.columns.append(ColumnSchema(from_name="FirstName", to_name="first_name"))
-    #     schema.columns.append(ColumnSchema(from_name="IsHomeless", to_name="is_homeless", true=1, false=2))
-    #
-    #     keys = ["ID", "FirstName", "IsHomeless"]
-    #     values = [[1, "Kevin", 1], [2, "Michael", 2], [3, "Walter", 1]]
-    #
-    #     with mock.patch('django_bend.convert.create_fixture_item') as cfi:
-    #         res = process_table(schema, keys, values)
-    #
-    #         list(res)
-    #
-    #         model = 'core.person'
-    #         keys = ['pk', 'first_name', 'is_homeless']
-    #         call1 = mock.call(model=model, keys=keys,
-    #                           values=values[0])
-    #         call2 = mock.call(model=model, keys=keys,
-    #                           values=values[1])
-    #         call3 = mock.call(model=model, keys=keys,
-    #                           values=values[2])
-    #         cfi.assert_has_calls([call1, call2, call3])
+    def test_simple_mapping(self):
+        schema = TableSchema(from_table="ftbl_person", to_table="core.person")
+        schema.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
+        schema.columns.append(ColumnSchema(from_name="FirstName", to_name="first_name"))
+        schema.columns.append(ColumnSchema(from_name="IsHomeless", to_name="is_homeless", true=1, false=2))
+
+        keys = ["ID", "FirstName", "IsHomeless"]
+        values = [[1, "Kevin", 1], [2, "Michael", 2], [3, "Walter", 1]]
+
+        with mock.patch('django_bend.convert.create_fixture_item') as cfi:
+            res = process_table(schema, keys, values)
+
+            list(res)
+
+            model = 'core.person'
+            keys = ['pk', 'first_name', 'is_homeless']
+            call1 = mock.call(model=model, keys=keys,
+                              values=values[0])
+            call2 = mock.call(model=model, keys=keys,
+                              values=values[1])
+            call3 = mock.call(model=model, keys=keys,
+                              values=values[2])
+            cfi.assert_has_calls([call1, call2, call3])
 
 
 class TestCreateFixtureItem:
-
 
     def test_simple_case(self):
         model="core.property"
@@ -77,7 +76,6 @@ class TestCreateFixtureItem:
         }
         create_fixture_item(model, keys, values) == expected_result
 
-
     def test_simple_case_different_order(self):
         model="core.property"
         keys=['phone', 'description', 'pk', 'address']
@@ -93,12 +91,9 @@ class TestCreateFixtureItem:
         }
         create_fixture_item(model, keys, values) == expected_result
 
-
     def test_no_pk(self):
         model="core.property"
         keys=['phone', 'description', 'address']
         values=['1234567890', 'Property Name', '123 Property Street']
         with pytest.raises(Exception):
             create_fixture_item(model, keys, values)
-
-
