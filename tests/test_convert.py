@@ -36,10 +36,10 @@ class TestProcessTable:
     def test_simple_mapping(self):
         table = TableSchema(from_table="ftbl_person", to_table="core.person")
         table.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
-        table.columns.append(ColumnSchema(from_name="IsHomeless", to_name="is_homeless",
+        table.columns.append(ColumnSchema(from_name="CanSwim", to_name="can_swim",
                                            mapping=[{'from': 1, 'to': True}, {'from': 2, 'to': False}]))
 
-        keys = ["ID", "IsHomeless"]
+        keys = ["ID", "CanSwim"]
         values = [[1, 1], [3, 1]]
 
         with mock.patch('django_bend.convert.create_fixture_item') as cfi:
@@ -48,7 +48,7 @@ class TestProcessTable:
             list(res)
 
             model = 'core.person'
-            keys = {'pk': table.columns[0].mapping, 'is_homeless': table.columns[1].mapping}
+            keys = {'pk': table.columns[0].mapping, 'can_swim': table.columns[1].mapping}
             call1 = mock.call(model=model, keys=keys,
                               values=values[0])
             call2 = mock.call(model=model, keys=keys,
