@@ -99,7 +99,7 @@ class TestCreateFixtureItem:
         model = "core.property"
         mapping = MappingSchema([{'from': 1, 'to': True}, {'from': 2, 'to': False}])
         keys = {'phone': MappingSchema(), 'description': MappingSchema(),
-                'pk': MappingSchema(), 'address': MappingSchema(), 'is_homeless': mapping}
+                'pk': MappingSchema(), 'address': MappingSchema(), 'can_swim': mapping}
         values = ['1234567890', 'Property Name', 7, '123 Property Street', 1]
         expected_result = {
             'model': 'core.property',
@@ -108,7 +108,7 @@ class TestCreateFixtureItem:
                 'phone': '1234567890',
                 'description': 'Property Name',
                 'address': '123 Property Street',
-                'is_homeless': True
+                'can_swim': True
             }
         }
         create_fixture_item(model, keys, values) == expected_result
