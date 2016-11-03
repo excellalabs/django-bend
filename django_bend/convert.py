@@ -16,11 +16,17 @@ from .parsing import sql_list_splitter, parse_sql_list
 
 def create_fixture_item(model, keys, values):
     # Create a Django Fixture formatted dictionary
+    # Input:
+    #
+    # model: a string value of the fixture model
+    # keys: a list of field names
+    # values: a list of field values
+    #
     # Assumptions:
     #     keys and values are both pre-sorted
-    #     one key/value pair is 'id' or 'ID'
+    #     one key/value pair is 'pk'
     #
-    # A Django fixture looks like this:
+    # Output sample:
     #
     # {
     #   "fields": {
@@ -36,15 +42,6 @@ def create_fixture_item(model, keys, values):
         pk = fields.pop('pk')
     else:
         raise Exception('Expected "pk" as a key in dictionary')
-
-    if isinstance(keys, dict):
-        keys.pop('pk')
-        fields = {}
-        for index, key in enumerate(keys.keys()):
-            if not keys[key].empty():
-                fields[key] = keys[key].map_elem(values[index])
-            else:
-                fields[key] = values[index]
 
     return {'fields': fields, 'model': model, 'pk': pk}
 
@@ -98,8 +95,15 @@ def get_table_from_dump(tablename, dumpfilename, column_filter=None, offset=None
 
 
 def generate_fixture_tables(tableschemas, dumpfilename):
-    # Parse requested tables from sql dump, return generator of
-    # fixture-formatted JSON objects for each row in each table
+    # Parse requested tables from sql dump
+    #
+    # Input:
+    # tableschemas: an array of TableSchema objects
+    # dumpfilename: String value of mysql dump
+    #
+    # Output:
+    # A generator of dicts for each row of each table defined in tableschemas
+    # Each dict is in a format prepared to `json.dumps` into a Django Fixture format
 
     for table in tableschemas:
         old_column_names = [column.from_name for column in table.columns]
@@ -118,27 +122,27 @@ def generate_fixture_tables(tableschemas, dumpfilename):
         # Forward the generator results from process_table
         # Ideally `yield for` would be used here, but that is
         # not python2 compatible
-        for item in process_table(table_schema=table, columns=columns, rows=rows):
+        for item in process_table(table_schema=table,
+                                  parsed_column_names=columns,
+                                  parsed_rows=rows):
             yield item
 
 
-def process_table(table_schema, columns, rows):
+def process_table(table_schema, parsed_column_names, parsed_rows):
     # For each row, map the data to the new column names and
     # return a fixture-formatted JSON object
 
     # Ensure all the column names defined actually exist
     for column in table_schema.columns:
-       if column.from_name not in columns:
+       if column.from_name not in parsed_column_names:
            raise Exception("Unrecognized table name: %s:%s" % (table_schema.from_table,
                                                                column.from_name))
 
-    if table_schema.has_mappings():
-        new_columns = {column.to_name: column.mapping for column in table_schema.columns}
-    else:
-        new_columns = [column.to_name for column in table_schema.columns]
-
+    new_columns = [column.to_name for column in table_schema.columns]
 
     # convert data to dictionary and append to results
-    for values_list in rows:
-        yield create_fixture_item(keys=new_columns, values=values_list,
+    for values_list in parsed_rows:
+        # get a copy of values_list with mappings applied
+        mapped_values = table_schema.get_mapped_values(values_list)
+        yield create_fixture_item(keys=new_columns, values=list(mapped_values),
                                   model=table_schema.to_table)

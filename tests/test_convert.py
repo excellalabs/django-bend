@@ -23,8 +23,7 @@ class TestProcessTable:
             list(res)
 
             model = 'core.property'
-            keys = {'pk': schema.columns[0].mapping, 'phone': schema.columns[1].mapping,
-                    'address': schema.columns[2].mapping}
+            keys = ['pk', 'phone', 'address']
             call1 = mock.call(model=model, keys=keys,
                               values=[1, '(123)456-7890', '123 Property Street'])
             call2 = mock.call(model=model, keys=keys,
@@ -37,23 +36,26 @@ class TestProcessTable:
         table = TableSchema(from_table="ftbl_person", to_table="core.person")
         table.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
         table.columns.append(ColumnSchema(from_name="CanSwim", to_name="can_swim",
-                                           mapping=[{'from': 1, 'to': True}, {'from': 2, 'to': False}]))
+                                          mapping=[{'from': 1, 'to': 'test'}, {'from': 2, 'to': False}]))
 
-        keys = ["ID", "CanSwim"]
-        values = [[1, 1], [3, 1]]
+        input_keys = ["ID", "CamSwim"]
+        input_values = [[1, 1], [2, 3], [3, 2]]
 
         with mock.patch('django_bend.convert.create_fixture_item') as cfi:
-            res = process_table(table, keys, values)
-
+            res = process_table(table, input_keys, input_values)
+            # convert rest to a list to exercise the generator
             list(res)
 
             model = 'core.person'
-            keys = {'pk': table.columns[0].mapping, 'can_swim': table.columns[1].mapping}
-            call1 = mock.call(model=model, keys=keys,
-                              values=values[0])
-            call2 = mock.call(model=model, keys=keys,
-                              values=values[1])
-            cfi.assert_has_calls([call1, call2])
+            expected_keys = ['pk', 'can_swim']
+            expected_values = [[1, 'test'], [2, 3], [3, False]]
+            call1 = mock.call(model=model, keys=expected_keys,
+                              values=expected_values[0])
+            call2 = mock.call(model=model, keys=expected_keys,
+                              values=expected_values[1])
+            call3 = mock.call(model=model, keys=expected_keys,
+                              values=expected_values[2])
+            cfi.assert_has_calls([call1, call2, call3])
 
 
 class TestCreateFixtureItem:
@@ -109,6 +111,42 @@ class TestCreateFixtureItem:
                 'description': 'Property Name',
                 'address': '123 Property Street',
                 'can_swim': True
+            }
+        }
+        create_fixture_item(model, keys, values) == expected_result
+
+    def test_with_mapping_no_match(self):
+        model = "core.property"
+        mapping = MappingSchema([{'from': 1, 'to': True}, {'from': 2, 'to': False}])
+        keys = {'phone': MappingSchema(), 'description': MappingSchema(),
+                'pk': MappingSchema(), 'address': MappingSchema(), 'is_developer': mapping}
+        values = ['1234567890', 'Property Name', 7, '123 Property Street', 3]
+        expected_result = {
+            'model': 'core.property',
+            'pk': 7,
+            "fields": {
+                'phone': '1234567890',
+                'description': 'Property Name',
+                'address': '123 Property Street',
+                'is_developer': 3
+            }
+        }
+        create_fixture_item(model, keys, values) == expected_result
+
+    def test_with_mapping_already_matched(self):
+        model = "core.property"
+        mapping = MappingSchema([{'from': 1, 'to': True}, {'from': 2, 'to': False}])
+        keys = {'phone': MappingSchema(), 'description': MappingSchema(),
+                'pk': MappingSchema(), 'address': MappingSchema(), 'is_developer': mapping}
+        values = ['1234567890', 'Property Name', 7, '123 Property Street', False]
+        expected_result = {
+            'model': 'core.property',
+            'pk': 7,
+            "fields": {
+                'phone': '1234567890',
+                'description': 'Property Name',
+                'address': '123 Property Street',
+                'is_developer': False
             }
         }
         create_fixture_item(model, keys, values) == expected_result
