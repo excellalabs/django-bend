@@ -5,9 +5,10 @@ from setuptools import setup, find_packages
 setup(
     name = "django_bend",
     description = "Database dump conversion to Django fixtures",
-    version = "0.0.2",
-    license = "public domain",
+    version = "0.0.3",
+    license = "MIT",
     classifiers = [
+        'License :: OSI Approved :: MIT License',
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
