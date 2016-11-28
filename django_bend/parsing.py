@@ -50,6 +50,8 @@ def parse_into_object_type(raw_value):
     result = regex.match(raw_value)
     if result:
         value = result.group('value')
+    elif isinstance(raw_value, int) or isinstance(raw_value, float):
+        return raw_value
     else:
         raise Exception("Unrecognized value format: %s" % raw_value)
 
