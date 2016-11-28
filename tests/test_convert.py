@@ -38,7 +38,7 @@ class TestProcessTable:
         table.columns.append(ColumnSchema(from_name="CanSwim", to_name="can_swim",
                                           mapping=[{'from': 1, 'to': 'test'}, {'from': 2, 'to': False}]))
 
-        input_keys = ["ID", "CamSwim"]
+        input_keys = ["ID", "CanSwim"]
         input_values = [[1, 1], [2, 3], [3, 2]]
 
         with mock.patch('django_bend.convert.create_fixture_item') as cfi:
