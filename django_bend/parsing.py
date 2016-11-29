@@ -46,12 +46,21 @@ def parse_into_object_type(raw_value):
     if raw_value == 'NULL':
         return None
 
+    try:
+        value = int(raw_value)
+    except ValueError:
+        try:
+            value = float(raw_value)
+        except ValueError:
+            value = None
+
     # If the value isn't NULL, then let's parse it
     regex = re.compile(r"^ ?[`'\"](?P<value>.*)[`'\"] ?$")
-    if isinstance(raw_value, int) or isinstance(raw_value, float):
-        return raw_value
-    elif regex.match(raw_value):
-        value = regex.match(raw_value).group('value')
+    result = regex.match(raw_value)
+    if result:
+        value = result.group('value')
+    elif isinstance(value, int) or isinstance(value, float):
+        return value
     else:
         raise Exception("Unrecognized value format: %s" % raw_value)
 
