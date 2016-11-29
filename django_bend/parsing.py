@@ -36,20 +36,31 @@ def sql_list_splitter(sqlstr):
     result = new_str.split('\n')
     return result
 
+
 def parse_into_object_type(raw_value):
     # Expects a raw value from a SQL list
-    # Examples: `ID`, NULL, 'John', or '1'
+    # Examples: `ID`, NULL, 'John', '1', 1, or 1.0
     # Also, raw_value may have a leading whitespace character
     # Identify the best Python object type
 
     if raw_value == 'NULL':
         return None
 
+    try:
+        value = int(raw_value)
+    except ValueError:
+        try:
+            value = float(raw_value)
+        except ValueError:
+            value = None
+
     # If the value isn't NULL, then let's parse it
     regex = re.compile(r"^ ?[`'\"](?P<value>.*)[`'\"] ?$")
     result = regex.match(raw_value)
     if result:
         value = result.group('value')
+    elif isinstance(value, int) or isinstance(value, float):
+        return value
     else:
         raise Exception("Unrecognized value format: %s" % raw_value)
 

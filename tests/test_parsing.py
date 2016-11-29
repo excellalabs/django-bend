@@ -32,6 +32,16 @@ class TestParseIntoObjectType:
     def test_int(self):
         assert parse_into_object_type("'100'") == 100
 
+    def test_raw_int(self):
+        assert parse_into_object_type("100") == 100
+
+    def test_raw_float(self):
+        assert parse_into_object_type("100.1") == 100.1
+
+    def test_raw_unrecognized_value(self):
+        with pytest.raises(Exception):
+            parse_into_object_type("true")
+
     def test_float(self):
         assert parse_into_object_type("'100.0'") == 100.0
 
