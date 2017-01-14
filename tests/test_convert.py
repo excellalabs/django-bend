@@ -32,6 +32,69 @@ class TestProcessTable:
                               values=[3, '152-6374', '456 Main Street'])
             cfi.assert_has_calls([call1, call2, call3])
 
+    def test_out_of_order(self):
+
+        schema = TableSchema(from_table='ftbl_properties',
+                             to_table='core.property')
+
+        # The columns are appended in a different order than they appear
+        # in the key/value dumps, and this should be okay
+        schema.columns.append(ColumnSchema(from_name="PropertyAddress", to_name="address"))
+        schema.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
+        schema.columns.append(ColumnSchema(from_name="Phone_Number", to_name="phone"))
+
+        keys = ["ID", "Phone_Number", "PropertyAddress"]
+        values = [[1,'(123)456-7890','123 Property Street'],[2,'(098) 765-4321',None],[3,'152-6374','456 Main Street']]
+
+        with mock.patch('django_bend.convert.create_fixture_item') as cfi:
+            res = process_table(schema, keys, values)
+            # convert rest to a list to exercise the generator
+            list(res)
+
+            model = 'core.property'
+            keys = ['pk', 'phone', 'address']
+            call1 = mock.call(model=model, keys=keys,
+                              values=[1, '(123)456-7890', '123 Property Street'])
+            call2 = mock.call(model=model, keys=keys,
+                              values=[2, '(098) 765-4321', None])
+            call3 = mock.call(model=model, keys=keys,
+                              values=[3, '152-6374', '456 Main Street'])
+            cfi.assert_has_calls([call1, call2, call3])
+
+    def test_when_unexpected_extra_key_then_exception(self):
+
+        schema = TableSchema(from_table='ftbl_properties',
+                             to_table='core.property')
+
+        schema.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
+        schema.columns.append(ColumnSchema(from_name="Phone_Number", to_name="phone"))
+        schema.columns.append(ColumnSchema(from_name="PropertyAddress", to_name="address"))
+
+        keys = ["ID", "Phone_Number", "PropertyAddress", "MadeUpColumn"]
+        values = [[1,'(123)456-7890','123 Property Street', 'test'],[2,'(098) 765-4321',None, 'test'],[3,'152-6374','456 Main Street', 'test']]
+
+        with pytest.raises(Exception):
+            res = process_table(schema, keys, values)
+            # convert rest to a list to exercise the generator
+            list(res)
+
+    def test_when_schema_column_from_name_not_in_keys_then_exception(self):
+
+        schema = TableSchema(from_table='ftbl_properties',
+                             to_table='core.property')
+
+        schema.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
+        schema.columns.append(ColumnSchema(from_name="MadeUpColumn", to_name="phone"))
+        schema.columns.append(ColumnSchema(from_name="PropertyAddress", to_name="address"))
+
+        keys = ["ID", "Phone_Number", "PropertyAddress"]
+        values = [[1,'(123)456-7890','123 Property Street'],[2,'(098) 765-4321',None],[3,'152-6374','456 Main Street']]
+
+        with pytest.raises(Exception):
+            res = process_table(schema, keys, values)
+            # convert rest to a list to exercise the generator
+            list(res)
+
     def test_simple_mapping(self):
         table = TableSchema(from_table="ftbl_person", to_table="core.person")
         table.columns.append(ColumnSchema(from_name="ID", to_name="pk"))
