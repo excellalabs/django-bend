@@ -132,17 +132,30 @@ def process_table(table_schema, parsed_column_names, parsed_rows):
     # For each row, map the data to the new column names and
     # return a fixture-formatted JSON object
 
-    # Ensure all the column names defined actually exist
+    if len(parsed_column_names) != len(table_schema.columns):
+        raise Exception("Unexpected number of columns when parsing table %s. "
+                        "Expected %d columns but got %d" % (table_schema.from_table,
+                                                            len(table_schema.columns),
+                                                            len(parsed_column_names)))
+
+    # Create a list of new table names that align with the order of the
+    # parsed rows. Also, ensure all the column names defined actually exist
+    new_columns = {}
     for column in table_schema.columns:
-       if column.from_name not in parsed_column_names:
-           raise Exception("Unrecognized table name: %s:%s" % (table_schema.from_table,
+        try:
+            column_index = parsed_column_names.index(column.from_name)
+            new_columns[column_index] = column.to_name
+        except ValueError:
+            raise Exception("Unrecognized table name: %s:%s" % (table_schema.from_table,
                                                                column.from_name))
 
-    new_columns = [column.to_name for column in table_schema.columns]
+    # We can't assume the dict is ordered, so convert the dict to an ordered list
+    ordered_new_column_names = [new_columns[x] for x in sorted(new_columns.keys())]
 
     # convert data to dictionary and append to results
     for values_list in parsed_rows:
         # get a copy of values_list with mappings applied
         mapped_values = table_schema.get_mapped_values(values_list)
-        yield create_fixture_item(keys=new_columns, values=list(mapped_values),
+        yield create_fixture_item(keys=ordered_new_column_names,
+                                  values=list(mapped_values),
                                   model=table_schema.to_table)

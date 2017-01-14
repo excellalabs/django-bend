@@ -158,3 +158,21 @@ The fixture can then be loaded easily:
 ```shell
 ./manage.py loaddata myapp/fixtures/bend.json
 ```
+
+## Development and Testing
+
+To develop on django-bend:
+
+```
+git clone https://github.com/excellalabs/django-bend
+virtualenv venv
+. venv/bin/activate
+pip install -r requirements.txt
+```
+
+To run tests:
+
+```
+pip install -r requirements-test.txt
+py.test
+```

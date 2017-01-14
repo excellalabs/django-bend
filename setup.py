@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 setup(
     name="django_bend",
     description="Database dump conversion to Django fixtures",
-    version="0.0.4",
+    version="0.0.5",
     license="MIT",
     classifiers=[
         'License :: OSI Approved :: MIT License',
@@ -14,12 +14,13 @@ setup(
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
         'Framework :: Django',
         'Framework :: Django :: 1.8',
         'Framework :: Django :: 1.9',
     ],
     keywords='django fixture database dump',
-    packages=find_packages(),
+    packages=['django_bend'],
     install_requires=[
         'simplejson>=3.8.0',
     ],
