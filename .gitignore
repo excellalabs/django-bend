@@ -4,3 +4,7 @@
 env/
 .idea/
 .vagrant/
+dist/
+*.egg-info/
+venv/
+env/
