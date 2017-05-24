@@ -89,7 +89,7 @@ def get_table_from_dump(tablename, dumpfilename, column_filter=None, offset=None
         # Filter the columns from the original (pre-filter) column indices
         values_list_of_lists = (parse_sql_list(r, column_filter=column_dict.values()) for r in rows)
 
-        return (line_counter, column_dict.keys(), values_list_of_lists)
+        return (line_counter, list(column_dict.keys()), values_list_of_lists)
 
     raise Exception("Table `%s` not found in file `%s`" % (tablename, dumpfilename))
 
