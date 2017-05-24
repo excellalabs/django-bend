@@ -22,7 +22,7 @@ setup(
         'Framework :: Django :: 1.11',
     ],
     keywords='django fixture database dump',
-    packages=['django_bend'],
+    packages=find_packages(exclude=['tests','tests.*','*.tests','*.tests.*']),
     install_requires=[
         'simplejson>=3.8.0',
     ],
