@@ -84,7 +84,7 @@ def parse_sql_list(results, column_filter=None):
     # Take sql style list in string format: "('blah', 'derp', 'herp')"
     # Return python list: ['blah', 'derp', 'herp']
 
-    values = sql_list_splitter(results.strip('()'))
+    values = sql_list_splitter(results.strip(' ()'))
 
     # Cherry pick select column indices if provided
     if column_filter:
