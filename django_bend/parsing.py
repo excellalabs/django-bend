@@ -12,7 +12,7 @@ def sql_list_splitter(sqlstr):
     is_open_string = False
     last_char_was_escape = False
 
-    for c in sqlstr:
+    for c in sqlstr.replace('\n',''):
         if not last_char_was_escape:
             if c == ',' and not is_open_group and not is_open_string:
                 c = '\n'
