@@ -23,7 +23,7 @@ class TableSchema:
 
     def get_mapped_values(self, values):
         # Return a copy of the values array, but with column mappings applied
-        if len(values) != len(self.columns):
+        if len(values) != len(set([column.from_name for column in self.columns])):
             raise Exception("Length of value array (%d) != number of columns (%d)" % (len(values), len(self.columns)))
 
         for (column, value) in zip(self.columns, values):

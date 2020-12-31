@@ -131,11 +131,9 @@ def process_table(table_schema, parsed_column_names, parsed_rows):
     # For each row, map the data to the new column names and
     # return a fixture-formatted JSON object
 
-    if len(parsed_column_names) != len(table_schema.columns):
-        raise Exception("Unexpected number of columns when parsing table %s. "
-                        "Expected %d columns but got %d" % (table_schema.from_table,
-                                                            len(table_schema.columns),
-                                                            len(parsed_column_names)))
+    not_found_columns = [schema.from_name for schema in table_schema.columns if schema.from_name not in parsed_column_names]
+    if len(not_found_columns) != 0:
+        raise Exception(f"Referenced column(s) not found when parsing table {table_schema.from_table} : {not_found_columns}")
 
     # Create a list of new table names that align with the order of the
     # parsed rows. Also, ensure all the column names defined actually exist
