@@ -14,7 +14,7 @@ from .schema import ColumnSchema
 from .parsing import sql_list_splitter, parse_sql_list
 
 
-def create_fixture_item(model, keys, values):
+def create_fixture_item(model, keys_values):
     # Create a Django Fixture formatted dictionary
     # Input:
     #
@@ -37,7 +37,7 @@ def create_fixture_item(model, keys, values):
     #   "model": "core.school",
     #   "pk": 7
     # },
-    fields = dict(zip(keys, values))
+    fields = {i[0]:i[1] for i in keys_values}
     if 'pk' in fields.keys():
         pk = fields.pop('pk')
     else:
@@ -152,7 +152,6 @@ def process_table(table_schema, parsed_column_names, parsed_rows):
     # convert data to dictionary and append to results
     for values_list in parsed_rows:
         # get a copy of values_list with mappings applied
-        mapped_values = table_schema.get_mapped_values(values_list)
-        yield create_fixture_item(keys=ordered_new_column_names,
-                                  values=list(mapped_values),
+        columns_with_mapped_values = table_schema.get_mapped_values(parsed_column_names, values_list)
+        yield create_fixture_item(keys_values=columns_with_mapped_values,
                                   model=table_schema.to_table)
