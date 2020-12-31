@@ -55,7 +55,7 @@ def get_table_from_dump(tablename, dumpfilename, column_filter=None, offset=None
     #
     # column_filter can be used to return only select columns. The primary
     # key field (`id` or `ID`) will always be returned
-    regex = re.compile(r"INSERT\sINTO\s[`'\"]%s[`'\"]\s\((?P<columns>.+)\)\sVALUES\s?(?P<values>.+?\));(\n|$)" % tablename, flags = re.S | re.M)
+    regex = re.compile(r"INSERT\sINTO\s[`'\"]%s[`'\"]\s\((?P<columns>.+?)\)\sVALUES\s(?P<values>.+?\));(\n|$)" % tablename, flags = re.S | re.M)
 
     column_names = []
     rows = []
