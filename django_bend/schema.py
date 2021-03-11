@@ -21,13 +21,14 @@ class TableSchema:
                                 columns=columns)
         return table_obj
 
-    def get_mapped_values(self, values):
+    def get_mapped_values(self, in_columns, values):
         # Return a copy of the values array, but with column mappings applied
-        if len(values) != len(self.columns):
+        if len(values) != len(set([column.from_name for column in self.columns])):
             raise Exception("Length of value array (%d) != number of columns (%d)" % (len(values), len(self.columns)))
 
-        for (column, value) in zip(self.columns, values):
-            yield column.get_target_value(value)
+        for column in self.columns:
+            value = values[in_columns.index(column.from_name)]
+            yield (column.to_name, column.get_target_value(value))
 
 
 class ColumnSchema:

@@ -12,7 +12,7 @@ def sql_list_splitter(sqlstr):
     is_open_string = False
     last_char_was_escape = False
 
-    for c in sqlstr:
+    for c in sqlstr.replace('\n',''):
         if not last_char_was_escape:
             if c == ',' and not is_open_group and not is_open_string:
                 c = '\n'
@@ -84,7 +84,7 @@ def parse_sql_list(results, column_filter=None):
     # Take sql style list in string format: "('blah', 'derp', 'herp')"
     # Return python list: ['blah', 'derp', 'herp']
 
-    values = sql_list_splitter(results.strip('()'))
+    values = sql_list_splitter(results.strip(' ()'))
 
     # Cherry pick select column indices if provided
     if column_filter:
